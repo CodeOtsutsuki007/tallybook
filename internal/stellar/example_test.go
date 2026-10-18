@@ -11,6 +11,13 @@ import (
 	"github.com/stellar/go-stellar-sdk/xdr"
 )
 
+func ExampleErrSimulationFailed_Error() {
+	err := &ErrSimulationFailed{Message: "contract failed"}
+	fmt.Println(err.Error())
+	// Output:
+	// stellar: simulation failed: contract failed
+}
+
 func ExampleInvokeAndSubmitWithAuth() {
 	const (
 		contractID        = "CB75TTWGP3TLKEDGA2WOLEVCNKLUX6X5KS47GMWGBHUAVES7J55LY25M"
