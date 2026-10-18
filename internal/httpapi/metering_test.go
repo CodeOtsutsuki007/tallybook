@@ -5,13 +5,12 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"github.com/Tallybook-Org/tallybook/internal/merkle"
+	"github.com/Tallybook-Org/tallybook/internal/meter"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/Tallybook-Org/tallybook/internal/merkle"
-	"github.com/Tallybook-Org/tallybook/internal/meter"
 )
 
 type fakeLedgerSource struct {
@@ -189,6 +188,7 @@ func TestConfig_Validate(t *testing.T) {
 // duplicated per failure kind.
 
 var errLedgerUnavailable = errors.New("rpc: ledger unavailable")
+
 var errRecordFailed = errors.New("store: connection refused")
 
 func TestMiddleware_FailureSourcesAllFailClosed(t *testing.T) {
@@ -598,4 +598,69 @@ func BenchmarkEndpointHashAndRequestID(b *testing.B) {
 			}
 		}
 	})
+}
+
+// ExampleMiddleware shows how a caller configures and runs Middleware to
+// meter a paid endpoint, record the request, and invoke the wrapped handler.
+func ExampleMiddleware() {
+	// A deterministic fake ledger source returning ledger 1500.
+	ledger := fakeLedgerSource{ledger: 1500}
+	// A fake recorder that prints the recorded request details.
+	recorder := &printRecorder{}
+
+	sched, err := meter.ParseSchedule([]byte(`{"rules":[{"method":"GET","path_template":"/v1/items","unit_price":"1000"}]}`))
+	if err != nil {
+		fmt.Println("ParseSchedule error:", err)
+		return
+	}
+	catalog, err := meter.NewCatalog(meter.CatalogVersion{Version: 1, EffectiveLedger: 1000, Schedule: sched})
+	if err != nil {
+		fmt.Println("NewCatalog error:", err)
+		return
+	}
+
+	cfg := Config{
+		Operator:     "GDOLCHAOYP63BEHGAUJJS5IVQNUXLPBWCHO2HZRBTZRU52XBMW2TRJLM",
+		Method:       "GET",
+		PathTemplate: "/v1/items",
+		Pricer:       meter.NewPricer(catalog),
+		Ledger:       ledger,
+		Recorder:     recorder,
+	}
+
+	mw, err := Middleware(cfg)
+	if err != nil {
+		fmt.Println("Middleware error:", err)
+		return
+	}
+
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok"))
+	})
+
+	req := httptest.NewRequest("GET", "/v1/items", nil)
+	info := RequestInfo{
+		Consumer: "GAJ46LDZSSYAB4YY6VMPM763P652ZROT7TBG3YYE3BZBAUZDXYDDK6OY",
+		Protocol: ProtocolX402,
+	}
+	req = req.WithContext(WithRequestInfo(req.Context(), info))
+	rec := httptest.NewRecorder()
+
+	mw(next).ServeHTTP(rec, req)
+
+	fmt.Printf("response status: %d, body: %s\n", rec.Code, rec.Body.String())
+
+	// Output:
+	// recorded: GET /v1/items consumer GAJ46LDZSSYAB4YY6VMPM763P652ZROT7TBG3YYE3BZBAUZDXYDDK6OY protocol x402
+	// 1 unit(s) charged 1000 stroops price v1 observed ledger 1500
+	// response status: 200, body: ok
+}
+
+type printRecorder struct{}
+
+func (printRecorder) RecordRequest(_ context.Context, req RecordedRequest) error {
+	fmt.Printf("recorded: %s %s consumer %s protocol %s\n", req.Method, req.PathTemplate, req.Consumer, req.Protocol)
+	fmt.Printf("%d unit(s) charged %s stroops price v%d observed ledger %d\n", req.UnitCount, req.ChargedAmount, req.PriceVersion, req.ObservedLedger)
+	return nil
 }
