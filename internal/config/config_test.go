@@ -553,3 +553,12 @@ func setProcessEnv(env map[string]string) func() {
 		}
 	}
 }
+
+// ExampleSecret_GoString demonstrates the GoString method of Secret,
+// which returns [REDACTED] to prevent accidental secret leakage in debugging.
+func ExampleSecret_GoString() {
+	s := Secret("S1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	fmt.Println(s.GoString())
+	// Output:
+	// [REDACTED]
+}
