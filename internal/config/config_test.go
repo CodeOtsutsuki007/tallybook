@@ -480,6 +480,30 @@ func ExampleLoad() {
 // os.LookupEnv, which cannot be injected, so the example sets and restores
 // the process environment itself; every other test injects a map instead
 // (see Lookup's doc comment).
+func ExampleConfig_String() {
+	cfg := &Config{
+		DatabaseURL:          "postgres://tallybook:tallybook@localhost:5432/tallybook",
+		StellarRPCURL:        "https://soroban-testnet.stellar.org",
+		NetworkPassphrase:    "Test SDF Network ; September 2015",
+		PriceBookID:          "CBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+		StatementRegistryID:  "CDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+		OperatorAddress:      "GAAACAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUPB7JZX",
+		OperatorSecretSource: "env",
+		OperatorSecret:       "SXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+		SafetyMarginLedgers:  1440,
+		MaxExposure:          big.NewInt(10000000),
+		MaxExposureAge:       24 * time.Hour,
+		PeriodDuration:       720 * time.Hour,
+		SettlerTick:          30 * time.Second,
+		IndexerStartLedger:   4590000,
+		CollectorAddr:        ":8080",
+		LogLevel:             slog.LevelInfo,
+	}
+	fmt.Println(cfg.String())
+	// Output:
+	// Config{DatabaseURL:postgres://tallybook:tallybook@localhost:5432/tallybook StellarRPCURL:https://soroban-testnet.stellar.org NetworkPassphrase:Test SDF Network ; September 2015 PriceBookID:CBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA StatementRegistryID:CDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA OperatorAddress:GAAACAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUPB7JZX OperatorSecretSource:env OperatorSecret:[REDACTED] OperatorSecretPath:[REDACTED] SafetyMarginLedgers:1440 MaxExposure:10000000 MaxExposureAge:24h0m0s PeriodDuration:720h0m0s SettlerTick:30s IndexerStartLedger:4590000 CollectorAddr::8080 LogLevel:INFO}
+}
+
 func ExampleLoadEnv() {
 	restore := setProcessEnv(validEnv())
 	defer restore()
