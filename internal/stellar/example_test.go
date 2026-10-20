@@ -53,3 +53,16 @@ func ExampleInvokeAndSubmitWithAuth() {
 	fmt.Println(errors.Is(err, context.Canceled))
 	// Output: true
 }
+
+// ExampleErrTransactionFailed_Error constructs an ErrTransactionFailed with
+// a concrete literal transaction hash and result XDR, then calls its Error()
+// method and prints the formatted string.
+func ExampleErrTransactionFailed_Error() {
+	err := &ErrTransactionFailed{
+		Hash:      "83806937259d185c694da8e4efd7d8e7e859c8df235f8f77895f244c999068d3",
+		ResultXDR: "AAAAAAAAAGT////+",
+	}
+	fmt.Println(err.Error())
+	// Output:
+	// stellar: transaction 83806937259d185c694da8e4efd7d8e7e859c8df235f8f77895f244c999068d3 failed on chain
+}
