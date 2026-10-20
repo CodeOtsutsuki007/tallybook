@@ -70,6 +70,25 @@ func ExampleScvAddress() {
 	// GAAACAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUPB7JZX
 }
 
+func ExampleDecodeVec() {
+	vecVal := ScvVec([]xdr.ScVal{ScvU32(42), ScvSymbol("hello")})
+	items, err := DecodeVec(vecVal)
+	if err != nil {
+		panic(err)
+	}
+	uVal, err := DecodeU32(items[0])
+	if err != nil {
+		panic(err)
+	}
+	sVal, err := DecodeSymbol(items[1])
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(uVal, sVal)
+	// Output:
+	// 42 hello
+}
+
 func TestScvU32_RoundTrip(t *testing.T) {
 	for _, v := range []uint32{0, 1, 42, 1 << 31, 1<<32 - 1} {
 		got, err := DecodeU32(ScvU32(v))
@@ -546,6 +565,20 @@ func ExampleMapField() {
 	}
 	fmt.Println(amount)
 	// Output: 1250
+}
+
+func ExampleMapEntry() {
+	entry := MapEntry("amount", ScvU64(1250))
+	key, err := DecodeSymbol(entry.Key)
+	if err != nil {
+		log.Fatal(err)
+	}
+	amount, err := DecodeU64(entry.Val)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%s: %d\n", key, amount)
+	// Output: amount: 1250
 }
 
 func ExampleMarshalScValBase64() {
