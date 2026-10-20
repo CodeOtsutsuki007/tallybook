@@ -417,6 +417,13 @@ func TestConfig_StringRedactsSecretPath(t *testing.T) {
 	}
 }
 
+func ExampleSecret_Reveal() {
+	s := Secret("S1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
+	fmt.Println(s.Reveal())
+	// Output:
+	// S1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+}
+
 func TestSecret_RedactsUnderAllFormatVerbs(t *testing.T) {
 	s := Secret("super-secret-value")
 	for _, rendered := range []string{
