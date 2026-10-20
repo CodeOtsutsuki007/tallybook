@@ -557,6 +557,20 @@ func ExampleMapField() {
 	// Output: 1250
 }
 
+func ExampleMapEntry() {
+	entry := MapEntry("amount", ScvU64(1250))
+	key, err := DecodeSymbol(entry.Key)
+	if err != nil {
+		log.Fatal(err)
+	}
+	amount, err := DecodeU64(entry.Val)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%s: %d\n", key, amount)
+	// Output: amount: 1250
+}
+
 func ExampleMarshalScValBase64() {
 	encoded, err := MarshalScValBase64(ScvU32(42))
 	if err != nil {
