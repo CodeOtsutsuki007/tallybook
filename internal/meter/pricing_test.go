@@ -242,6 +242,43 @@ func TestCatalog_VersionAt_PicksTheEffectiveVersion(t *testing.T) {
 	}
 }
 
+// ExampleCatalog_VersionAt demonstrates how a caller uses VersionAt to find
+// which CatalogVersion was active at a specific observation ledger, as
+// well as handling the case where the ledger predates all versions.
+func ExampleCatalog_VersionAt() {
+	schedV1, err := ParseSchedule([]byte(`{"rules":[{"method":"GET","path_template":"/v1/items","unit_price":"100"}]}`))
+	if err != nil {
+		panic(err)
+	}
+	schedV2, err := ParseSchedule([]byte(`{"rules":[{"method":"GET","path_template":"/v1/items","unit_price":"200"}]}`))
+	if err != nil {
+		panic(err)
+	}
+
+	catalog, err := NewCatalog(
+		CatalogVersion{Version: 1, EffectiveLedger: 1000, Schedule: schedV1},
+		CatalogVersion{Version: 2, EffectiveLedger: 2000, Schedule: schedV2},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	// A ledger at or after an effective ledger resolves to that version.
+	v, err := catalog.VersionAt(1500)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("ledger 1500 version:", v.Version)
+
+	// A ledger prior to the earliest effective ledger returns ErrNoVersionAt.
+	_, err = catalog.VersionAt(999)
+	fmt.Println("ledger 999 error:", errors.Is(err, ErrNoVersionAt))
+
+	// Output:
+	// ledger 1500 version: 1
+	// ledger 999 error: true
+}
+
 func TestCatalog_VersionAt_BeforeEarliestReturnsErrNoVersionAt(t *testing.T) {
 	sched := mustSchedule(t, `{"rules":[{"method":"GET","path_template":"/v1/x","unit_price":"1"}]}`)
 	catalog, err := NewCatalog(CatalogVersion{Version: 1, EffectiveLedger: 1000, Schedule: sched})
