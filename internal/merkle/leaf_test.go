@@ -274,6 +274,16 @@ func TestEndpointHash_DistinguishesMethodAndPath(t *testing.T) {
 	}
 }
 
+// ExampleEndpointHash demonstrates how to compute the endpoint hash for a
+// given HTTP method and path template.
+func ExampleEndpointHash() {
+	hash := EndpointHash("GET", "/v1/widgets/{id}")
+	fmt.Printf("%x\n", hash)
+
+	// Output:
+	// f7968b93731d5e337052ea0d1b0c0863f568393cbfb5ab807a87f505922e3b01
+}
+
 // ExampleRecord shows how a caller constructs a Record and what the zero
 // value is worth. Record is not an output type: every field is
 // caller-supplied, because each comes from a different part of the same
